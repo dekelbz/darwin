@@ -2,7 +2,7 @@ package com.dekel.darwin.users.service;
 
 import com.dekel.darwin.users.domain.User;
 import com.dekel.darwin.users.repository.UserRepository;
-import com.dekel.darwin.users.repository.UserRepository.UserId;
+import com.dekel.darwin.users.repository.views.Id;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -59,7 +59,7 @@ class UserServiceImplTest {
         oldUser.setDepartment("old Department");
         oldUser.setId(23L);
 
-        UserId userId = mock(UserId.class);
+        Id userId = mock(Id.class);
         given(userId.getId()).willReturn(oldUser.getId());
         given(userRepository.getIdByEmail(userEmail))
                 .willReturn(userId);

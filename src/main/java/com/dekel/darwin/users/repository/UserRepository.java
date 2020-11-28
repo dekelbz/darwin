@@ -1,6 +1,7 @@
 package com.dekel.darwin.users.repository;
 
 import com.dekel.darwin.users.domain.User;
+import com.dekel.darwin.users.repository.views.Id;
 import org.springframework.data.repository.CrudRepository;
 
 public interface UserRepository extends CrudRepository<User, Long> {
@@ -9,9 +10,6 @@ public interface UserRepository extends CrudRepository<User, Long> {
 
     long deleteByEmail(String email);
 
-    UserId getIdByEmail(String email);
+    Id getIdByEmail(String email);
 
-    interface UserId {
-        Long getId();
-    }
 }
