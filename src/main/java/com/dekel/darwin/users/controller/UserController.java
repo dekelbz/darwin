@@ -29,10 +29,10 @@ public class UserController {
      * @return ok if the user is created. Bad request response if not all user properties are valid
      */
     @PostMapping
-    @ResponseBody
     public ResponseEntity<?> saveOrUpdateUser(@Valid UserDTO user, BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
-            return generateErrorResponse(bindingResult);
+            return ResponseEntity.badRequest()
+                    .body(userPresentationLayer.generateErrorResponse(bindingResult));
         }
         userPresentationLayer.saveOrUpdate(user);
         return ResponseEntity.ok().build();
@@ -43,7 +43,6 @@ public class UserController {
      * @return the user if exists, otherwise not found response
      */
     @GetMapping
-    @ResponseBody
     public ResponseEntity<?> getUser(@RequestParam String email) {
         return userPresentationLayer.getByEmail(email)
                 .map(ResponseEntity::ok)
@@ -60,12 +59,5 @@ public class UserController {
             return ResponseEntity.ok().build();
         }
         return ResponseEntity.notFound().build();
-    }
-
-    private ResponseEntity<Collection<String>> generateErrorResponse(BindingResult bindingResult) {
-        return ResponseEntity.badRequest()
-                .body(bindingResult.getAllErrors().stream()
-                        .map(DefaultMessageSourceResolvable::getDefaultMessage)
-                        .collect(Collectors.toList()));
     }
 }

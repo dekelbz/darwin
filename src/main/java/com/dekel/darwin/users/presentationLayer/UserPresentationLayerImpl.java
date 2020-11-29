@@ -3,9 +3,13 @@ package com.dekel.darwin.users.presentationLayer;
 import com.dekel.darwin.users.domain.User;
 import com.dekel.darwin.users.domain.UserDTO;
 import com.dekel.darwin.users.service.UserService;
+import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.stereotype.Service;
+import org.springframework.validation.BindingResult;
 
+import java.util.Collection;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class UserPresentationLayerImpl implements UserPresentationLayer {
@@ -30,6 +34,13 @@ public class UserPresentationLayerImpl implements UserPresentationLayer {
     @Override
     public boolean deleteByEmail(String email) {
         return userService.deleteByEmail(email);
+    }
+
+    @Override
+    public Collection<String> generateErrorResponse(BindingResult bindingResult) {
+        return bindingResult.getAllErrors().stream()
+                .map(DefaultMessageSourceResolvable::getDefaultMessage)
+                .collect(Collectors.toList());
     }
 
     private UserDTO transform(User dbUser) {
