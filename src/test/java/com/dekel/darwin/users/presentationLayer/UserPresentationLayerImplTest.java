@@ -9,11 +9,18 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.ObjectError;
 
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Optional;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.hasItems;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
@@ -80,5 +87,24 @@ class UserPresentationLayerImplTest {
         //then
         assertFalse(byEmail.isPresent());
         verify(userService).getByEmail(userEmail);
+    }
+
+    @Test
+    public void shouldGenerateErrorResponse() {
+        //given
+        String errorCode1 = "error code 1";
+        String errorCode2 = "error code 2";
+        BindingResult bindingResult = mock(BindingResult.class);
+        given(bindingResult.getAllErrors())
+                .willReturn(Arrays.asList(
+                        new ObjectError("name 1", errorCode1),
+                        new ObjectError("name 2", errorCode2)));
+
+        //when
+        Collection<String> errorCodes = userPresentationLayer.generateErrorResponse(bindingResult);
+
+        //then
+        assertThat(errorCodes, hasItems(errorCode1, errorCode2));
+        assertEquals(errorCodes.size(), 2);
     }
 }
