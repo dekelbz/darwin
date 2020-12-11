@@ -1,12 +1,17 @@
 package com.dekel.darwin.users.service;
 
-import com.dekel.darwin.users.domain.User;
 import com.dekel.darwin.users.domain.UserDTO;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.ExecutionException;
 
 public interface UserService {
     void saveOrUpdate(UserDTO user);
 
-    User getByEmail(String email);
+    Optional<UserDTO> getByEmail(String email) throws ExecutionException, InterruptedException;
 
-    boolean deleteByEmail(String email);
+    void deleteByEmail(String email);
+
+
 }

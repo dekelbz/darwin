@@ -1,13 +1,11 @@
 package com.dekel.darwin.users.controller;
 
-import com.dekel.darwin.users.domain.User;
 import com.dekel.darwin.users.domain.UserDTO;
 import com.dekel.darwin.users.service.UserService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
-import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -16,6 +14,7 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
 import java.util.Map;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.BDDMockito.given;
@@ -33,8 +32,6 @@ class UserControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    @MockBean
-    private ModelMapper modelMapper;
     @MockBean
     private UserService userService;
 
@@ -87,20 +84,18 @@ class UserControllerTest {
     @Test
     public void shouldGetUser() throws Exception {
         //given
-        User user = new User();
+        UserDTO user = new UserDTO();
         user.setFirstName("user first name");
 
         String userEmail = "correct@user.com";
         given(userService.getByEmail(userEmail))
-                .willReturn(user);
+                .willReturn(Optional.of(user));
 
         UserDTO userDTO = UserDTO.builder()
                 .firstName(user.getFirstName())
                 .lastName("user last name")
                 .build();
 
-        given(modelMapper.map(user, UserDTO.class))
-                .willReturn(userDTO);
 
         //when + then
         mvc.perform(get(USER_URL)
@@ -120,14 +115,9 @@ class UserControllerTest {
 
     @Test
     public void shouldDelete() throws Exception {
-        //given
-        String userEmail = "email@delete.com";
-        given(userService.deleteByEmail(userEmail))
-                .willReturn(true);
-
         //when + then
         mvc.perform(delete(USER_URL)
-                .param("email", userEmail))
+                .param("email", "user@email.com"))
                 .andExpect(status().isOk());
     }
 

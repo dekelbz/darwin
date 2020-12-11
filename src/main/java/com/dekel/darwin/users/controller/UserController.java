@@ -2,27 +2,26 @@ package com.dekel.darwin.users.controller;
 
 import com.dekel.darwin.users.domain.UserDTO;
 import com.dekel.darwin.users.service.UserService;
-import org.modelmapper.ModelMapper;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import java.util.Collection;
-import java.util.Optional;
+import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
 @RestController
+@Validated
 @RequestMapping("/user")
 public class UserController {
 
     private final UserService userService;
-    private final ModelMapper modelMapper;
 
-    public UserController(UserService userService, ModelMapper modelMapper) {
+    public UserController(UserService userService) {
         this.userService = userService;
-        this.modelMapper = modelMapper;
     }
 
     /**
@@ -47,9 +46,9 @@ public class UserController {
      * @return the user if exists, otherwise not found response
      */
     @GetMapping
-    public ResponseEntity<?> getUser(@RequestParam String email) {
-        return Optional.ofNullable(userService.getByEmail(email))
-                .map(user -> ResponseEntity.ok(modelMapper.map(user, UserDTO.class)))
+    public ResponseEntity<?> getUser(@RequestParam String email) throws ExecutionException, InterruptedException {
+        return userService.getByEmail(email)
+                .map(ResponseEntity::ok)
                 .orElseGet(ResponseEntity.notFound()::build);
     }
 
@@ -59,10 +58,8 @@ public class UserController {
      */
     @DeleteMapping
     public ResponseEntity<?> deleteUser(@RequestParam String email) {
-        if (userService.deleteByEmail(email)) {
-            return ResponseEntity.ok().build();
-        }
-        return ResponseEntity.notFound().build();
+        userService.deleteByEmail(email);
+        return ResponseEntity.ok().build();
     }
 
     private Collection<String> generateErrorResponse(BindingResult bindingResult) {
