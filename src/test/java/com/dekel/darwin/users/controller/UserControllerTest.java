@@ -1,7 +1,7 @@
 package com.dekel.darwin.users.controller;
 
 import com.dekel.darwin.users.domain.UserDTO;
-import com.dekel.darwin.users.presentationLayer.UserPresentationLayer;
+import com.dekel.darwin.users.service.UserService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
@@ -17,7 +17,6 @@ import java.util.Map;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -30,12 +29,11 @@ class UserControllerTest {
     public static final String USER_URL = "/user";
     @Autowired
     private MockMvc mvc;
-
     @Autowired
     private ObjectMapper objectMapper;
 
     @MockBean
-    private UserPresentationLayer userPresentationLayer;
+    private UserService userService;
 
     @Test
     public void shouldSave() throws Exception {
@@ -56,10 +54,10 @@ class UserControllerTest {
                 .andExpect(status().isOk());
 
         //then
-        ArgumentCaptor<UserDTO> userDTOCaptor = ArgumentCaptor.forClass(UserDTO.class);
+        ArgumentCaptor<UserDTO> userCaptor = ArgumentCaptor.forClass(UserDTO.class);
 
-        verify(userPresentationLayer).saveOrUpdate(userDTOCaptor.capture());
-        assertEquals(userDTOCaptor.getValue().getEmail(), userDTO.getEmail());
+        verify(userService).saveOrUpdate(userCaptor.capture());
+        assertEquals(userCaptor.getValue().getEmail(), userDTO.getEmail());
     }
 
     @Test
@@ -80,19 +78,24 @@ class UserControllerTest {
                 .andExpect(status().is4xxClientError());
 
         //then
-        verify(userPresentationLayer).generateErrorResponse(any());
+
     }
 
     @Test
     public void shouldGetUser() throws Exception {
         //given
-        UserDTO userDTO = UserDTO.builder()
-                .firstName("user first name")
-                .build();
+        UserDTO user = new UserDTO();
+        user.setFirstName("user first name");
 
         String userEmail = "correct@user.com";
-        given(userPresentationLayer.getByEmail(userEmail))
-                .willReturn(Optional.of(userDTO));
+        given(userService.getByEmail(userEmail))
+                .willReturn(Optional.of(user));
+
+        UserDTO userDTO = UserDTO.builder()
+                .firstName(user.getFirstName())
+                .lastName("user last name")
+                .build();
+
 
         //when + then
         mvc.perform(get(USER_URL)
@@ -112,14 +115,9 @@ class UserControllerTest {
 
     @Test
     public void shouldDelete() throws Exception {
-        //given
-        String userEmail = "email@delete.com";
-        given(userPresentationLayer.deleteByEmail(userEmail))
-                .willReturn(true);
-
         //when + then
         mvc.perform(delete(USER_URL)
-                .param("email", userEmail))
+                .param("email", "user@email.com"))
                 .andExpect(status().isOk());
     }
 
