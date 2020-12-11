@@ -1,9 +1,10 @@
 package com.dekel.darwin.users.service;
 
 import com.dekel.darwin.users.domain.User;
+import com.dekel.darwin.users.domain.UserDTO;
 
 public interface UserService {
-    void saveOrUpdate(User user);
+    void saveOrUpdate(UserDTO user);
 
     User getByEmail(String email);
 

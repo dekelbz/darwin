@@ -1,11 +1,13 @@
 package com.dekel.darwin.users.controller;
 
+import com.dekel.darwin.users.domain.User;
 import com.dekel.darwin.users.domain.UserDTO;
-import com.dekel.darwin.users.presentationLayer.UserPresentationLayer;
+import com.dekel.darwin.users.service.UserService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -14,10 +16,8 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
 import java.util.Map;
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -30,12 +30,13 @@ class UserControllerTest {
     public static final String USER_URL = "/user";
     @Autowired
     private MockMvc mvc;
-
     @Autowired
     private ObjectMapper objectMapper;
 
     @MockBean
-    private UserPresentationLayer userPresentationLayer;
+    private ModelMapper modelMapper;
+    @MockBean
+    private UserService userService;
 
     @Test
     public void shouldSave() throws Exception {
@@ -56,10 +57,10 @@ class UserControllerTest {
                 .andExpect(status().isOk());
 
         //then
-        ArgumentCaptor<UserDTO> userDTOCaptor = ArgumentCaptor.forClass(UserDTO.class);
+        ArgumentCaptor<UserDTO> userCaptor = ArgumentCaptor.forClass(UserDTO.class);
 
-        verify(userPresentationLayer).saveOrUpdate(userDTOCaptor.capture());
-        assertEquals(userDTOCaptor.getValue().getEmail(), userDTO.getEmail());
+        verify(userService).saveOrUpdate(userCaptor.capture());
+        assertEquals(userCaptor.getValue().getEmail(), userDTO.getEmail());
     }
 
     @Test
@@ -80,19 +81,26 @@ class UserControllerTest {
                 .andExpect(status().is4xxClientError());
 
         //then
-        verify(userPresentationLayer).generateErrorResponse(any());
+
     }
 
     @Test
     public void shouldGetUser() throws Exception {
         //given
-        UserDTO userDTO = UserDTO.builder()
-                .firstName("user first name")
-                .build();
+        User user = new User();
+        user.setFirstName("user first name");
 
         String userEmail = "correct@user.com";
-        given(userPresentationLayer.getByEmail(userEmail))
-                .willReturn(Optional.of(userDTO));
+        given(userService.getByEmail(userEmail))
+                .willReturn(user);
+
+        UserDTO userDTO = UserDTO.builder()
+                .firstName(user.getFirstName())
+                .lastName("user last name")
+                .build();
+
+        given(modelMapper.map(user, UserDTO.class))
+                .willReturn(userDTO);
 
         //when + then
         mvc.perform(get(USER_URL)
@@ -114,7 +122,7 @@ class UserControllerTest {
     public void shouldDelete() throws Exception {
         //given
         String userEmail = "email@delete.com";
-        given(userPresentationLayer.deleteByEmail(userEmail))
+        given(userService.deleteByEmail(userEmail))
                 .willReturn(true);
 
         //when + then

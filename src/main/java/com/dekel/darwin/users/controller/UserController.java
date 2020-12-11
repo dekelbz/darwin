@@ -1,7 +1,8 @@
 package com.dekel.darwin.users.controller;
 
 import com.dekel.darwin.users.domain.UserDTO;
-import com.dekel.darwin.users.presentationLayer.UserPresentationLayer;
+import com.dekel.darwin.users.service.UserService;
+import org.modelmapper.ModelMapper;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
@@ -9,16 +10,19 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import java.util.Collection;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/user")
 public class UserController {
 
-    private final UserPresentationLayer userPresentationLayer;
+    private final UserService userService;
+    private final ModelMapper modelMapper;
 
-    public UserController(UserPresentationLayer userPresentationLayer) {
-        this.userPresentationLayer = userPresentationLayer;
+    public UserController(UserService userService, ModelMapper modelMapper) {
+        this.userService = userService;
+        this.modelMapper = modelMapper;
     }
 
     /**
@@ -32,9 +36,9 @@ public class UserController {
     public ResponseEntity<?> saveOrUpdateUser(@Valid UserDTO user, BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
             return ResponseEntity.badRequest()
-                    .body(userPresentationLayer.generateErrorResponse(bindingResult));
+                    .body(generateErrorResponse(bindingResult));
         }
-        userPresentationLayer.saveOrUpdate(user);
+        userService.saveOrUpdate(user);
         return ResponseEntity.ok().build();
     }
 
@@ -44,8 +48,8 @@ public class UserController {
      */
     @GetMapping
     public ResponseEntity<?> getUser(@RequestParam String email) {
-        return userPresentationLayer.getByEmail(email)
-                .map(ResponseEntity::ok)
+        return Optional.ofNullable(userService.getByEmail(email))
+                .map(user -> ResponseEntity.ok(modelMapper.map(user, UserDTO.class)))
                 .orElseGet(ResponseEntity.notFound()::build);
     }
 
@@ -55,9 +59,15 @@ public class UserController {
      */
     @DeleteMapping
     public ResponseEntity<?> deleteUser(@RequestParam String email) {
-        if (userPresentationLayer.deleteByEmail(email)) {
+        if (userService.deleteByEmail(email)) {
             return ResponseEntity.ok().build();
         }
         return ResponseEntity.notFound().build();
+    }
+
+    private Collection<String> generateErrorResponse(BindingResult bindingResult) {
+        return bindingResult.getAllErrors().stream()
+                .map(DefaultMessageSourceResolvable::getDefaultMessage)
+                .collect(Collectors.toList());
     }
 }

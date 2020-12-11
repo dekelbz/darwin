@@ -1,27 +1,31 @@
 package com.dekel.darwin.users.service;
 
 import com.dekel.darwin.users.domain.User;
+import com.dekel.darwin.users.domain.UserDTO;
 import com.dekel.darwin.users.repository.UserRepository;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.Optional;
 
 @Service
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
+    private final KafkaTemplate<String, UserDTO> kafkaTemplate;
+    private final String userSaveTopic;
 
-    public UserServiceImpl(UserRepository userRepository) {
+    public UserServiceImpl(UserRepository userRepository, KafkaTemplate<String, UserDTO> kafkaTemplate,
+                           @Value("${kafka.topic.save.user}") String userSaveTopic) {
         this.userRepository = userRepository;
+        this.kafkaTemplate = kafkaTemplate;
+        this.userSaveTopic = userSaveTopic;
     }
 
     @Override
     @Transactional
-    public void saveOrUpdate(User user) {
-        Optional.ofNullable(userRepository.getIdByEmail(user.getEmail()))
-                .ifPresent(userId -> user.setId(userId.getId()));
-        userRepository.save(user);
+    public void saveOrUpdate(UserDTO user) {
+        kafkaTemplate.send(userSaveTopic, user);
     }
 
     @Override
