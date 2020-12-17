@@ -14,7 +14,6 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
 import java.util.Map;
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.BDDMockito.given;
@@ -38,15 +37,8 @@ class UserControllerTest {
     @Test
     public void shouldSave() throws Exception {
         //given
-        UserDTO userDTO = UserDTO.builder()
-                .department("user department")
-                .email("user@email.com")
-                .firstName("user first")
-                .lastName("user last")
-                .password("user_password")
-                .phoneNumber("0543289481")
-                .roleTitle("user role title")
-                .build();
+        UserDTO userDTO = new UserDTO("user@email.com", "user first", "user last", "user_password", "0543289481",
+                "user department", "user role title");
 
         //when
         mvc.perform(post(USER_URL)
@@ -63,14 +55,8 @@ class UserControllerTest {
     @Test
     public void shouldNotSave_missingDepartment() throws Exception {
         //given
-        UserDTO userDTO = UserDTO.builder()
-                .email("user@email.com")
-                .firstName("user first")
-                .lastName("user last")
-                .password("user_password")
-                .phoneNumber("0543289481")
-                .roleTitle("user role title")
-                .build();
+        UserDTO userDTO = new UserDTO("user@email.com", "user first", "user last", "user_password", "0543289481",
+                null, "user role title");
 
         //when
         mvc.perform(post(USER_URL)
@@ -89,12 +75,9 @@ class UserControllerTest {
 
         String userEmail = "correct@user.com";
         given(userService.getByEmail(userEmail))
-                .willReturn(Optional.of(user));
+                .willReturn(user);
 
-        UserDTO userDTO = UserDTO.builder()
-                .firstName(user.getFirstName())
-                .lastName("user last name")
-                .build();
+        UserDTO userDTO = new UserDTO(user.getFirstName(), "user last name", null, null, null, null, null);
 
 
         //when + then
