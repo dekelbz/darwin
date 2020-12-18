@@ -1,5 +1,6 @@
 package com.dekel.darwin.users.controller;
 
+import com.dekel.darwin.users.domain.Address;
 import com.dekel.darwin.users.domain.UserDTO;
 import com.dekel.darwin.users.service.UserService;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -38,7 +39,7 @@ class UserControllerTest {
     public void shouldSave() throws Exception {
         //given
         UserDTO userDTO = new UserDTO("user@email.com", "user first", "user last", "user_password", "0543289481",
-                "user department", "user role title");
+                "user department", "user role title", null);
 
         //when
         mvc.perform(post(USER_URL)
@@ -56,7 +57,7 @@ class UserControllerTest {
     public void shouldNotSave_missingDepartment() throws Exception {
         //given
         UserDTO userDTO = new UserDTO("user@email.com", "user first", "user last", "user_password", "0543289481",
-                null, "user role title");
+                null, "user role title", new Address());
 
         //when
         mvc.perform(post(USER_URL)
@@ -77,7 +78,7 @@ class UserControllerTest {
         given(userService.getByEmail(userEmail))
                 .willReturn(user);
 
-        UserDTO userDTO = new UserDTO(user.getFirstName(), "user last name", null, null, null, null, null);
+        UserDTO userDTO = new UserDTO(user.getFirstName(), "user last name", null, null, null, null, null, null);
 
 
         //when + then
